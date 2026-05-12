@@ -98,26 +98,6 @@ async def get_product_by_id(product_id: int):
             
             return product
             # return dict(zip(columns, row)) if row else None
-            
-#async def get_products_inactive():
-#    async with await get_conn() as conn:
-#        async with conn.cursor() as cur:
-#            await cur.execute(
-#            """
-#            SELECT id, sku, name, description, price, stock, is_active, created_at, updated_at
-#            FROM products
-#            WHERE is_active = FALSE;
-#            """,
-#            )
-#            rows = await cur.fetchall()
-#            products_inactive = []
-#            
-#            for row in rows:
-#                product = dict(zip(columns, row))
-#                product["display_id"] = format_product_id(product["id"])
-#                products_inactive.append(product)
-#                
-#    return products_inactive
         
 async def create_product(product: product_schema.ProductCreate):
     data = {"sku": product.sku, "name": product.name, "description": product.description, "price": product.price, "stock": product.stock}
@@ -297,3 +277,47 @@ async def hard_delete_product(product_id: int):
                 
     return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "message": "Produto removido com sucesso!"}
 
+
+
+#async def list_products():
+#    async with await get_conn() as conn:
+#        async with conn.cursor() as cur:
+#            await cur.execute(
+#                """
+#                SELECT id, sku, name, description, price, stock, is_active, created_at, updated_at
+#                FROM products
+#                ORDER BY id;
+#                """
+#            )
+#
+#            rows = await cur.fetchall()
+#            products = []
+#            
+#            for row in rows:
+#                product = dict(zip(columns, row))
+#                product["display_id"] = format_product_id(product["id"])
+#                products.append(product)
+#            
+#            return products
+#            #return [dict(zip(columns, row)) for row in rows]
+
+
+#async def get_products_inactive():
+#    async with await get_conn() as conn:
+#        async with conn.cursor() as cur:
+#            await cur.execute(
+#            """
+#            SELECT id, sku, name, description, price, stock, is_active, created_at, updated_at
+#            FROM products
+#            WHERE is_active = FALSE;
+#            """,
+#            )
+#            rows = await cur.fetchall()
+#            products_inactive = []
+#            
+#            for row in rows:
+#                product = dict(zip(columns, row))
+#                product["display_id"] = format_product_id(product["id"])
+#                products_inactive.append(product)
+#                
+#    return products_inactive
