@@ -1,4 +1,3 @@
-````md
 # Products Async API
 
 Async REST API developed with FastAPI, PostgreSQL and psycopg.
@@ -64,7 +63,7 @@ app/
 ├── services/
 ├── utils/
 └── main.py
-````
+```
 
 ---
 
