@@ -1,7 +1,7 @@
 from app.repositories import product_repository
 
-async def list_products():
-    return await product_repository.list_products()
+async def list_products(limit: int = 10, offset: int = 0, is_active: bool | None = None, name: str | None = None, sku: str | None = None):
+    return await product_repository.list_products(limit, offset, is_active, name, sku)
 
 async def get_products_inactive():
     return await product_repository.get_products_inactive()

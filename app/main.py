@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.db.connection import get_db_connection
 from app.routers.product_router import router as product_router
+from app.exceptions.custom_exceptions import ProductNotFoundError, ProductActiveError, DuplicateSKUError
+from app.exceptions.handlers import product_not_found_handler, product_active_handler, duplicate_sku_handler
 
 app = FastAPI(
     title="Products Async API",
@@ -8,6 +10,9 @@ app = FastAPI(
     description="Async FastAPI project using PostgreSQL and psycopg.",
 )
 
+app.add_exception_handler(ProductNotFoundError, product_not_found_handler)
+app.add_exception_handler(ProductActiveError, product_active_handler)
+app.add_exception_handler(DuplicateSKUError, duplicate_sku_handler)
 app.include_router(product_router)
 
 
