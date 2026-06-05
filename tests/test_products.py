@@ -1,9 +1,16 @@
 from fastapi.testclient import TestClient
 from app.main import app
 from app.services import product_service
+from app.auth.dependencies import get_current_user
+from app.auth.dependencies import require_manager_or_admin
 
 client = TestClient(app)
 
+async def fake_current_user():
+    return {
+        "username": "jordy",
+        "role": "ADMIN"
+    }
 
 async def fake_list_products(limit=10, offset=0, is_active=None, name=None, sku=None):
     return [
@@ -24,6 +31,8 @@ async def fake_list_products(limit=10, offset=0, is_active=None, name=None, sku=
 
 def test_get_products(monkeypatch):
     monkeypatch.setattr(product_service, "list_products", fake_list_products)
+    
+    app.dependency_overrides[get_current_user] = fake_current_user
 
     response = client.get("/products")
 
@@ -48,6 +57,8 @@ def test_create_product(monkeypatch):
         "price": 20.5,
         "stock": 10
     }
+    
+    app.dependency_overrides[require_manager_or_admin] = fake_current_user
 
     response = client.post("/products", json=payload)
 
@@ -77,6 +88,8 @@ def test_get_product_not_found(monkeypatch):
         "get_product_by_id",
         fake_get_product_by_id_none
     )
+    
+    app.dependency_overrides[require_manager_or_admin] = fake_current_user
 
     response = client.get("/products/99999999")
 
@@ -92,6 +105,8 @@ def test_get_product_by_id(monkeypatch):
         "get_product_by_id",
         fake_get_product_by_id_success
     )
+    
+    app.dependency_overrides[require_manager_or_admin] = fake_current_user
 
     response = client.get("/products/20260001")
 
