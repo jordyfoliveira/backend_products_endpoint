@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 class ProductCreate(BaseModel):
-    sku: str = Field(..., pattern="^SKU\d{3}$")
+    sku: str = Field(..., pattern=r"^SKU\d{3}$")
     name: str = Field(..., min_length=3)
     description: str = ""
     price: float = Field(..., ge=0.01)
