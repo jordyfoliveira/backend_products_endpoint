@@ -29,3 +29,71 @@ def test_get_products(monkeypatch):
 
     assert response.status_code == 200
     assert response.json()[0]["sku"] == "SKU001"
+    
+async def fake_create_product(product):
+    return {
+        "id": 20260002,
+        "display_id": "2026-0002",
+        "message": "Produto criado com sucesso!"
+    }
+
+
+def test_create_product(monkeypatch):
+    monkeypatch.setattr(product_service, "create_product", fake_create_product)
+
+    payload = {
+        "sku": "SKU002",
+        "name": "Produto Teste",
+        "description": "Produto criado em teste",
+        "price": 20.5,
+        "stock": 10
+    }
+
+    response = client.post("/products", json=payload)
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 20260002
+    assert response.json()["display_id"] == "2026-0002"
+    
+from app.services import product_service
+
+async def fake_get_product_by_id_none(product_id):
+    return None
+
+async def fake_get_product_by_id_success(product_id):
+    return {
+        "id": 20260001,
+        "display_id": "2026-0001",
+        "sku": "SKU001",
+        "name": "Mouse",
+        "price": 19.99,
+        "stock": 10
+    }
+
+
+def test_get_product_not_found(monkeypatch):
+    monkeypatch.setattr(
+        product_service,
+        "get_product_by_id",
+        fake_get_product_by_id_none
+    )
+
+    response = client.get("/products/99999999")
+
+    assert response.status_code == 404
+    assert response.json() == {
+        "detail": "Produto não encontrado"
+    }
+
+
+def test_get_product_by_id(monkeypatch):
+    monkeypatch.setattr(
+        product_service,
+        "get_product_by_id",
+        fake_get_product_by_id_success
+    )
+
+    response = client.get("/products/20260001")
+
+    assert response.status_code == 200
+    assert response.json()["sku"] == "SKU001"
