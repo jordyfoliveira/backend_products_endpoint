@@ -21,6 +21,16 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     details JSONB
 );
 
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    hashed_password TEXT NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'USER',
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 -- índices úteis
 CREATE INDEX IF NOT EXISTS idx_products_name ON products (name);
 CREATE INDEX IF NOT EXISTS idx_audit_logs_ts ON audit_logs (ts);

@@ -5,6 +5,12 @@ import httpx
 NEW_API = "http://localhost:8001/products"
 JSON_FILE = "old_products.json"
 
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJqb3JkeSIsInJvbGUiOiJBRE1JTiIsImV4cCI6MTc4MDYzMjc4Mn0.YHb-MuN78qhVIsDxBjujIm0rONo-y72BygWZN7XlhyQ"
+
+headers = {
+    "Authorization": f"Bearer {TOKEN}"
+}
+
 
 async def main():
     with open(JSON_FILE, "r", encoding="utf-8") as file:
@@ -20,13 +26,19 @@ async def main():
                 "stock": int(product["stock"]),
             }
 
-            response = await client.post(NEW_API, json=payload)
+            response = await client.post(
+                NEW_API,
+                json=payload,
+                headers=headers
+            )
 
             if response.status_code == 409:
                 print("SKU duplicado:", payload["sku"])
                 continue
 
+            print(response.status_code, response.text)
             response.raise_for_status()
+
             print("Importado:", response.json())
 
 
