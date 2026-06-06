@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import fastapi_swagger_dark as fsd
 from app.db.connection import get_db_connection
 from app.routers.product_router import router as product_router
 from app.routers.auth_router import router as auth_router
@@ -10,7 +11,11 @@ app = FastAPI(
     title="Products Async API",
     version="0.1.0",
     description="Async FastAPI project using PostgreSQL and psycopg.",
+    docs_url=None,
 )
+
+# Add the Swagger Dark theme
+fsd.install(app)
 
 app.add_exception_handler(ProductNotFoundError, product_not_found_handler)
 app.add_exception_handler(ProductActiveError, product_active_handler)
