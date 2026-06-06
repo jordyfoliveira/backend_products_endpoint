@@ -11,3 +11,21 @@ export async function getProducts() {
 
     return response.data;
 }
+
+export type ProductCreate = {
+    sku: string;
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+};
+
+export async function createProduct(product: ProductCreate) {
+    const token = localStorage.getItem("token");
+
+    const response = await api.post("/products", product, {
+        headers: { Authorization: `Bearer ${token}` }
+    });
+
+    return response.data;
+}

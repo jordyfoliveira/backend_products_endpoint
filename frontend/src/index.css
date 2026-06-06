@@ -125,10 +125,6 @@ th {
     background-color: #333;
 }
 
-button {
-    width: 100%;
-}
-
 .logout-btn {
     background-color: #dc3545;
     color: white;
@@ -149,4 +145,39 @@ button {
 .logout-container {
     text-align: center;
     margin-bottom: 20px;
+}
+
+.product-form {
+    margin: 20px 0;
+    text-align: center;
+}
+
+.form-row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 10px 0;
+}
+
+.form-row input {
+    width: 180px;
+    padding: 8px;
+}
+
+.new-product-btn, .save-product-btn {
+    width: auto;
+    padding: 8px 18px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.new-product-btn {
+    background-color: #6c757d;
+    color: white;
+}
+
+.save-product-btn {
+    background-color: #198754;
+    color: white;
 }
