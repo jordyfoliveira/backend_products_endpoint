@@ -4,6 +4,7 @@ from app.db.connection import get_db_connection
 from app.routers.product_router import router as product_router
 from app.routers.auth_router import router as auth_router
 from app.routers.user_router import router as user_router
+from app.routers.audit_router import router as audit_router
 from app.exceptions.custom_exceptions import ProductNotFoundError, ProductActiveError, DuplicateSKUError
 from app.exceptions.handlers import product_not_found_handler, product_active_handler, duplicate_sku_handler
 
@@ -23,6 +24,7 @@ app.add_exception_handler(DuplicateSKUError, duplicate_sku_handler)
 app.include_router(product_router)
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(audit_router)
 
 
 @app.get("/health", tags=["Health"])

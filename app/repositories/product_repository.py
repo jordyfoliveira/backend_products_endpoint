@@ -99,8 +99,8 @@ async def get_product_by_id(product_id: int):
             return product
             # return dict(zip(columns, row)) if row else None
         
-async def create_product(product: product_schema.ProductCreate):
-    data = {"sku": product.sku, "name": product.name, "description": product.description, "price": product.price, "stock": product.stock}
+async def create_product(product: product_schema.ProductCreate, username: str):
+    data = {"sku": product.sku, "name": product.name, "description": product.description, "price": product.price, "stock": product.stock, "created_by": username}
     
     async with await get_conn() as conn:
         async with conn.cursor() as cur:
@@ -137,9 +137,26 @@ async def create_product(product: product_schema.ProductCreate):
         return {"id": product_id, "display_id": format_product_id(product_id), "message": "Produto criado com sucesso!"}
         #return product_id
         
-async def update_stock(product_id: int, new_stock: int):
+async def update_stock(product_id: int, new_stock: int, username: str):
     async with await get_conn() as conn:
         async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT stock
+                FROM products
+                WHERE id = %s;
+                """,
+                (product_id,)
+            )
+
+            old_row = await cur.fetchone()
+
+            if old_row is None:
+                return None
+
+            old_stock = old_row[0]
+            
+            
             await cur.execute(
                 """
                 UPDATE products
@@ -153,13 +170,29 @@ async def update_stock(product_id: int, new_stock: int):
             row = await cur.fetchone()
             
             if row is not None:
-                await log_action(cur, "Stock Update", "products", row[0], Jsonb({"stock": new_stock}))
+                await log_action(cur, "Stock Update", "products", row[0], Jsonb({"performed_by": username, "old_stock": old_stock, "new_stock": new_stock}))
                 
         return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "stock": row[1], "updated_at": row[2], "message": "Stock atualizado com sucesso!"}
         
-async def update_price(product_id: int, new_price: float):
+async def update_price(product_id: int, new_price: float, username: str):
     async with await get_conn() as conn:
         async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT price
+                FROM products
+                WHERE id = %s;
+                """,
+                (product_id,)
+            )
+
+            old_row = await cur.fetchone()
+
+            if old_row is None:
+                return None
+
+            old_price = old_row[0]
+            
             await cur.execute(
                 """
                 UPDATE products
@@ -173,13 +206,29 @@ async def update_price(product_id: int, new_price: float):
             row = await cur.fetchone()
             
             if row is not None:
-                await log_action(cur, "Price Update", "products", row[0], Jsonb({"price": new_price}))
+                await log_action(cur, "Price Update", "products", row[0], Jsonb({"performed_by": username, "old_price": old_price, "new_price": new_price}))
                 
         return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "price": row[1], "updated_at": row[2], "message": "Preço atualizado com sucesso!"}
 
-async def deactivate_product(product_id: int):
+async def deactivate_product(product_id: int, username: str):
     async with await get_conn() as conn:
         async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT is_active
+                FROM products
+                WHERE id = %s;
+                """,
+                (product_id,)
+            )
+
+            old_row = await cur.fetchone()
+
+            if old_row is None:
+                return None
+
+            old_is_active = old_row[0]
+            
             await cur.execute(
             """
             UPDATE products
@@ -193,13 +242,29 @@ async def deactivate_product(product_id: int):
             row = await cur.fetchone()
             
             if row is not None:
-                await log_action(cur, "Deactivate", "products", row[0], Jsonb({"is_active": False}))
+                await log_action(cur, "Deactivate", "products", row[0], Jsonb({"performed_by": username, "old_is_active": old_is_active, "new_is_active": False}))
         
     return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "message": "Produto desactivado com sucesso!"}
 
-async def activate_product(product_id: int):
+async def activate_product(product_id: int, username: str):
     async with await get_conn() as conn:
         async with conn.cursor() as cur:
+            await cur.execute(
+                """
+                SELECT is_active
+                FROM products
+                WHERE id = %s;
+                """,
+                (product_id,)
+            )
+
+            old_row = await cur.fetchone()
+
+            if old_row is None:
+                return None
+
+            old_is_active = old_row[0]
+            
             await cur.execute(
             """
             UPDATE products
@@ -213,11 +278,11 @@ async def activate_product(product_id: int):
             row = await cur.fetchone()
             
             if row is not None:
-                await log_action(cur, "Activate", "products", row[0], Jsonb({"is_active": True}))
+                await log_action(cur, "Activate", "products", row[0], Jsonb({"performed_by": username, "old_is_active": old_is_active, "new_is_active": True}))
         
     return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "message": "Produto reativado com sucesso!"}
 
-async def delete_product(product_id: int):
+async def delete_product(product_id: int, username: str):
     async with await get_conn() as conn:
         async with conn.cursor() as cur:
             await cur.execute(
@@ -254,7 +319,7 @@ async def delete_product(product_id: int):
             
             deleted_product = deleted_row[0]
             
-            await log_action(cur, "Delete", "products", deleted_product, Jsonb({}))
+            await log_action(cur, "Delete", "products", deleted_product, Jsonb({"performed_by": username}))
             
         return {"id": deleted_product, "display_id": format_product_id(deleted_product), "message": "Produto removido com sucesso!"}
             
@@ -277,6 +342,109 @@ async def hard_delete_product(product_id: int):
                 
     return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "message": "Produto removido com sucesso!"}
 
+
+
+#async def update_price(product_id: int, new_price: float):
+#    async with await get_conn() as conn:
+#        async with conn.cursor() as cur:
+#            await cur.execute(
+#                """
+#                UPDATE products
+#                SET price = %s,
+#                    updated_at = NOW()
+#                WHERE id = %s
+#                RETURNING id, price, updated_at;
+#                """,
+#                (new_price, product_id)
+#            )
+#            row = await cur.fetchone()
+#            
+#            if row is not None:
+#                await log_action(cur, "Price Update", "products", row[0], Jsonb({"price": new_price}))
+#                
+#        return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "price": row[1], "updated_at": row[2], "message": "Preço atualizado com sucesso!"}
+#
+#async def deactivate_product(product_id: int):
+#    async with await get_conn() as conn:
+#        async with conn.cursor() as cur:
+#            await cur.execute(
+#            """
+#            UPDATE products
+#            SET is_active = FALSE,
+#                updated_at = NOW()
+#            WHERE id = %s
+#            RETURNING id;
+#            """,
+#            (product_id,)
+#            )
+#            row = await cur.fetchone()
+#            
+#            if row is not None:
+#                await log_action(cur, "Deactivate", "products", row[0], Jsonb({"is_active": False}))
+#        
+#    return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "message": "Produto desactivado com sucesso!"}
+#
+#async def activate_product(product_id: int):
+#    async with await get_conn() as conn:
+#        async with conn.cursor() as cur:
+#            await cur.execute(
+#            """
+#            UPDATE products
+#            SET is_active = TRUE,
+#                updated_at = NOW()
+#            WHERE id = %s
+#            RETURNING id;
+#            """,
+#            (product_id,)
+#            )
+#            row = await cur.fetchone()
+#            
+#            if row is not None:
+#                await log_action(cur, "Activate", "products", row[0], Jsonb({"is_active": True}))
+#        
+#    return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "message": "Produto reativado com sucesso!"}
+#
+#async def delete_product(product_id: int):
+#    async with await get_conn() as conn:
+#        async with conn.cursor() as cur:
+#            await cur.execute(
+#            """
+#            SELECT is_active
+#            FROM products
+#            WHERE id = %s;
+#            """,
+#            (product_id,)
+#            )
+#            row = await cur.fetchone()
+#            
+#            if row is None:
+#                return None
+#            
+#            is_active = row[0]
+#            
+#            if is_active:
+#                return "ACTIVE"
+#            
+#            await cur.execute(
+#            """
+#            DELETE FROM products
+#            WHERE id = %s
+#            returning id;
+#            """,
+#            (product_id,)
+#            )
+#            
+#            deleted_row = await cur.fetchone()
+#            
+#            if deleted_row is None:
+#                return None
+#            
+#            deleted_product = deleted_row[0]
+#            
+#            await log_action(cur, "Delete", "products", deleted_product, Jsonb({}))
+#            
+#        return {"id": deleted_product, "display_id": format_product_id(deleted_product), "message": "Produto removido com sucesso!"}
+            
 
 
 #async def list_products():
