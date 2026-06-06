@@ -160,8 +160,7 @@ async def update_stock(product_id: int, new_stock: int, username: str):
             await cur.execute(
                 """
                 UPDATE products
-                SET stock = %s,
-                    updated_at = NOW()
+                SET stock = %s, updated_at = NOW()
                 WHERE id = %s
                 RETURNING id, stock, updated_at;
                 """,
@@ -170,9 +169,9 @@ async def update_stock(product_id: int, new_stock: int, username: str):
             row = await cur.fetchone()
             
             if row is not None:
-                await log_action(cur, "Stock Update", "products", row[0], Jsonb({"performed_by": username, "old_stock": old_stock, "new_stock": new_stock}))
+                await log_action(cur, "Stock Update", "products", row[0], Jsonb({"performed_by": username, "old_stock": float(old_stock), "new_stock": float(new_stock)}))
                 
-        return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "stock": row[1], "updated_at": row[2], "message": "Stock atualizado com sucesso!"}
+        return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "stock": float(row[1]), "updated_at": row[2], "message": "Stock atualizado com sucesso!"}
         
 async def update_price(product_id: int, new_price: float, username: str):
     async with await get_conn() as conn:
@@ -196,8 +195,7 @@ async def update_price(product_id: int, new_price: float, username: str):
             await cur.execute(
                 """
                 UPDATE products
-                SET price = %s,
-                    updated_at = NOW()
+                SET price = %s, updated_at = NOW()
                 WHERE id = %s
                 RETURNING id, price, updated_at;
                 """,
@@ -206,9 +204,9 @@ async def update_price(product_id: int, new_price: float, username: str):
             row = await cur.fetchone()
             
             if row is not None:
-                await log_action(cur, "Price Update", "products", row[0], Jsonb({"performed_by": username, "old_price": old_price, "new_price": new_price}))
+                await log_action(cur, "Price Update", "products", row[0], Jsonb({"performed_by": username, "old_price": float(old_price), "new_price": float(new_price)}))
                 
-        return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "price": row[1], "updated_at": row[2], "message": "Preço atualizado com sucesso!"}
+        return None if row is None else {"id": row[0], "display_id": format_product_id(row[0]), "price": float(row[1]), "updated_at": row[2], "message": "Preço atualizado com sucesso!"}
 
 async def deactivate_product(product_id: int, username: str):
     async with await get_conn() as conn:

@@ -29,3 +29,15 @@ export async function createProduct(product: ProductCreate) {
 
     return response.data;
 }
+
+export async function updateStock(productId: number, stock: number) {
+    const token = localStorage.getItem("token");
+    const response = await api.patch(`/products/${productId}/stock`, { stock }, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data;
+}
+
+export async function updatePrice(productId: number, price: number) {
+    const token = localStorage.getItem("token");
+    const response = await api.patch(`/products/${productId}/price`, { price }, { headers: { Authorization: `Bearer ${token}` } });
+    return response.data;
+}

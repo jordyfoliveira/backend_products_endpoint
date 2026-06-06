@@ -7,6 +7,7 @@ from app.routers.user_router import router as user_router
 from app.routers.audit_router import router as audit_router
 from app.exceptions.custom_exceptions import ProductNotFoundError, ProductActiveError, DuplicateSKUError
 from app.exceptions.handlers import product_not_found_handler, product_active_handler, duplicate_sku_handler
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="Products Async API",
@@ -25,6 +26,8 @@ app.include_router(product_router)
 app.include_router(auth_router)
 app.include_router(user_router)
 app.include_router(audit_router)
+
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"],)
 
 
 @app.get("/health", tags=["Health"])

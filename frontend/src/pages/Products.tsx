@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getProducts, createProduct } from "../services/productService";
+import { getProducts, createProduct, updateStock, updatePrice } from "../services/productService";
 
 type Product = { id: number; display_id: string; sku: string; name: string; description: string; price: number; stock: number; is_active: boolean };
 
@@ -13,9 +13,9 @@ export default function Products() {
     const [stock, setStock] = useState("");
 
     async function loadProducts() {
-            const data = await getProducts();
-            setProducts(data);
-        }
+        const data = await getProducts();
+        setProducts(data);
+    }
 
     async function logout() {
         localStorage.removeItem("token");
@@ -23,16 +23,48 @@ export default function Products() {
     }
 
     async function handleCreateProduct() {
-    await createProduct({sku, name, description, price: Number(price), stock: Number(stock)});
+        await createProduct({sku, name, description, price: Number(price), stock: Number(stock)});
 
-    setSku("");
-    setName("");
-    setDescription("");
-    setPrice("");
-    setStock("");
-    setShowForm(false);
-    await loadProducts();
-}
+        setSku("");
+        setName("");
+        setDescription("");
+        setPrice("");
+        setStock("");
+        setShowForm(false);
+        await loadProducts();
+    }
+
+    async function handleUpdatePrice(productId: number) {
+        const value = prompt("Novo preço:");
+
+        if (value === null || value.trim() === "") return;
+
+        const price = Number(value);
+
+        if (Number.isNaN(price) || price <= 0) {
+            alert("Preço inválido");
+            return;
+        }
+
+        await updatePrice(productId, price);
+        await loadProducts();
+    }
+
+    async function handleUpdateStock(productId: number) {
+        const value = prompt("Novo stock:");
+
+        if (value === null || value.trim() === "") return;
+
+        const stock = Number(value);
+
+        if (Number.isNaN(stock) || stock < 0) {
+            alert("Stock inválido");
+            return;
+        }
+
+        await updateStock(productId, stock);
+        await loadProducts();
+    }
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -86,6 +118,7 @@ export default function Products() {
                     <th>Nome</th>
                     <th>Preço</th>
                     <th>Stock</th>
+                    <th>Ações</th>
                 </tr>
             </thead>
 
@@ -97,6 +130,10 @@ export default function Products() {
                         <td>{product.name}</td>
                         <td>{product.price} €</td>
                         <td>{product.stock}</td>
+                        <td>
+                            <button onClick={() => handleUpdateStock(product.id)}>Stock</button>
+                            <button onClick={() => handleUpdatePrice(product.id)}>Preço</button>
+                        </td>
                     </tr>
                 ))}
             </tbody>
