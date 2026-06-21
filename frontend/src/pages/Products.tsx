@@ -11,6 +11,9 @@ export default function Products() {
     const [description, setDescription] = useState("");
     const [price, setPrice] = useState("");
     const [stock, setStock] = useState("");
+    const [search, setSearch] = useState("");
+    const [sortField, setSortField] = useState<keyof Product>("name");
+    const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
     async function loadProducts() {
         const data = await getProducts();
@@ -66,8 +69,41 @@ export default function Products() {
         await loadProducts();
     }
 
+    function handleSearch(products: Product[], search: string): Product[] {
+    const value = search.toLowerCase();
+
+    return products.filter((product) => product.sku?.toLowerCase().includes(value) || product.name?.toLowerCase().includes(value) || product.display_id?.toLowerCase().includes(value)
+        );
+    }
+
+    function handleSortProducts(products: Product[]): Product[] {
+    return [...products].sort((a, b) => {
+        let result = 0;
+
+        if (sortField === "display_id") result = a.display_id.localeCompare(b.display_id);
+        if (sortField === "sku") result = a.sku.localeCompare(b.sku);
+        if (sortField === "name") result = a.name.localeCompare(b.name);
+        if (sortField === "price") result = a.price - b.price;
+        if (sortField === "stock") result = a.stock - b.stock;
+
+        return sortDirection === "asc" ? result : -result;}
+        );
+    }
+
+    function handleSort(field: keyof Product) {
+    if (sortField === field) setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    else {
+        setSortField(field);
+        setSortDirection("asc");
+        }
+    }
+
+    const filteredProducts = handleSearch(products, search);
+    const sortedProducts = handleSortProducts(filteredProducts);
+
     useEffect(() => {
         const token = localStorage.getItem("token");
+        
 
         if (!token) {
             window.location.href = "/";
@@ -110,22 +146,28 @@ export default function Products() {
             )}
         </div>
 
+        <input
+            className="search-box"
+            type="text"
+            placeholder="Pesquisar por SKU ou Nome..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+        />
+
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>SKU</th>
-                    <th>Nome</th>
-                    <th>Preço</th>
-                    <th>Stock</th>
+                    <th onClick={() => handleSort("sku")}>SKU {sortField === "sku" ? (sortDirection === "asc" ? "▲" : "▼") : ""}</th>
+                    <th onClick={() => handleSort("name")}>Nome {sortField === "name" ? (sortDirection === "asc" ? "▲" : "▼") : ""}</th>
+                    <th onClick={() => handleSort("price")}>Preço {sortField === "price" ? (sortDirection === "asc" ? "▲" : "▼") : ""}</th>
+                    <th onClick={() => handleSort("stock")}>Stock {sortField === "stock" ? (sortDirection === "asc" ? "▲" : "▼") : ""}</th>
                     <th>Ações</th>
                 </tr>
             </thead>
 
             <tbody>
-                {products.map((product) => (
+                {sortedProducts.map((product) => (
                     <tr key={product.id}>
-                        <td>{product.display_id}</td>
                         <td>{product.sku}</td>
                         <td>{product.name}</td>
                         <td>{product.price} €</td>
