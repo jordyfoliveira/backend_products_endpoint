@@ -2,6 +2,11 @@ from app.repositories import user_repository
 from app.auth.password import hash_password
 from app.auth.password import verify_password
 from app.auth.jwt import create_access_token
+import secrets
+from datetime import datetime, timedelta
+
+token = secrets.token_urlsafe(32)
+expires_at = datetime.now() + timedelta(minutes=30)
 
 async def register_user(user):
 
@@ -53,3 +58,33 @@ async def login_user(user):
         "access_token": token,
         "token_type": "bearer"
     }
+    
+async def forgot_password(email: str):
+    user = await user_repository.get_user_by_email(email)
+
+    if user is None:
+        return {"message": "Se o email existir, será enviado um link de recuperação."}
+
+    token = secrets.token_urlsafe(32)
+    expires_at = datetime.now() + timedelta(minutes=30)
+
+    await user_repository.create_password_reset_token(user["id"], token, expires_at)
+
+    return {"message": "Token de redefinição de senha criado com sucesso!", "token": token}
+
+async def reset_password(token: str, new_password: str):
+    token_data = await user_repository.get_password_reset_token(token)
+
+    if token_data is None or token_data["used"]:
+        return None
+
+    if token_data["expires_at"] < datetime.now():
+        return None
+
+    hashed_password = hash_password(new_password)
+
+    await user_repository.update_user_password(token_data["user_id"], hashed_password)
+    await user_repository.mark_password_reset_token_used(token)
+
+    return {"message": "Password atualizada com sucesso!"}
+

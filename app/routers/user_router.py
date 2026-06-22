@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.auth.dependencies import require_admin
-from app.services import user_service
-from app.schemas.user import UserRoleUpdate
+from app.services import auth_service, user_service
+from app.schemas.user import UserRoleUpdate, ForgotPasswordRequest, ResetPasswordRequest
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -44,3 +44,17 @@ async def deactivate_user(user_id: int, current_user = Depends(require_admin)):
         raise HTTPException(status_code=404, detail="Utilizador não encontrado")
 
     return {"id": result["id"], "username": result["username"], "is_active": result["is_active"], "performed_by": current_user["username"], "message": "Utilizador desativado com sucesso!"}
+
+@router.post("/forgot-password")
+async def forgot_password(payload: ForgotPasswordRequest):
+    return await auth_service.forgot_password(payload.email)
+
+
+@router.post("/reset-password")
+async def reset_password(payload: ResetPasswordRequest):
+    result = await auth_service.reset_password(payload.token, payload.new_password)
+
+    if result is None:
+        raise HTTPException(status_code=400, detail="Token inválido ou expirado")
+
+    return result
